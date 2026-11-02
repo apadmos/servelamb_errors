@@ -59,7 +59,7 @@ class ErrorReporter:
 
         mention: str = f"{settings.slack_mention} " if settings.slack_mention else ""
         detail_block: str = f"\n```{details[:cls.MAX_DETAIL_CHARS]}```" if details else ""
-        text: str = f"{mention}*[{settings.environment_label}] {title}*{detail_block}{throttle_note}"
+        text: str = f"{mention} [{settings.environment_label}] {title} {detail_block}{throttle_note}"
         cls._post(url=settings.slack_webhook_url, text=text)
         return True
 
