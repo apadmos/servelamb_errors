@@ -84,13 +84,21 @@ class ErrorReporter:
 
     @classmethod
     def report_response(cls, req, resp) -> None:
-        """For a ServerApp before_response hook: reports the response if its status matches report_status_codes.
+        """For a ServerApp before_response hook: reports the response if its status matches report_status_codes,
+        unless the controller set error log level 0 with resp.log_level(0).
         An exception in a controller leaves the status at 200, so it's reported once, as an exception, not here"""
+
+        """Error log level 0: the controller asked for no logging of any kind (resp.log_level(0)).
+        Every other level, or none set, gets the default treatment below"""
+        if not resp or resp.current_log_level == 0:
+            return
+
         settings: ErrorReportingSettings | None = None
         try:
             settings = ErrorsConfig.settings()
             if not settings.slack_webhook_url and not settings.database:
                 return
+
             if not cls.status_matches(status=resp.status, patterns=settings.report_status_codes):
                 return
             headers: dict = req.headers or {}
