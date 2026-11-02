@@ -19,7 +19,7 @@ class ErrorReportingSettings:
 
     def __init__(self, slack_webhook_url: str = "", environment_label: str = "", throttle_minutes: float = 0,
                  report_status_codes: list[str] | None = None, slack_mention: str = "",
-                 database: ErrorsDatabaseSettings | None = None, log_retention_days: int = 10):
+                 database: ErrorsDatabaseSettings | None = None, log_max_rows: int = 1000):
         """A Slack incoming webhook; its channel (the recipient) is chosen when the webhook is created. Empty: off"""
         self.slack_webhook_url: str = slack_webhook_url
         """Shown at the start of every message, e.g. "prod" """
@@ -32,8 +32,8 @@ class ErrorReportingSettings:
         self.slack_mention: str = slack_mention
         """Where the throttle state is kept. None: no throttle, every error is sent"""
         self.database: ErrorsDatabaseSettings | None = database
-        """How many days of errors error_log keeps"""
-        self.log_retention_days: int = log_retention_days
+        """How many errors error_log keeps; the oldest are deleted as new ones arrive"""
+        self.log_max_rows: int = log_max_rows
 
 
 class ErrorsConfig(SynchedConfig):
@@ -73,6 +73,6 @@ class ErrorsConfig(SynchedConfig):
             report_status_codes=[str(code) for code in data.get("report_status_codes") or ["4xx", "5xx"]],
             slack_mention=data.get("slack_mention") or "",
             database=database,
-            log_retention_days=int(data.get("log_retention_days") or 10),
+            log_max_rows=int(data.get("log_max_rows") or 1000),
         )
         return cls._settings

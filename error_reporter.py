@@ -13,7 +13,7 @@ class ErrorReporter:
     The throttle (one message per kind of error per throttle_minutes) is kept in the error_throttle table, because
     on Lambda nothing in memory outlives a request. When that table can't be read, every error is sent.
     Urgent reports skip the throttle.
-    Every error, sent or held back, is also added to error_log, which keeps the last log_retention_days.
+    Every error, sent or held back, is also added to error_log, which keeps the newest log_max_rows.
 
     It never raises. If reporting itself fails, one plain message about that failure is attempted straight to the
     webhook, skipping the throttle and the formatting.
@@ -40,7 +40,7 @@ class ErrorReporter:
                 from .data_access.error_log_access import ErrorLogAccess
                 ErrorLogAccess().insert_and_prune(kind=kind, title=title, details=details, status=status,
                                                   method=method, path=path, slack_sent=slack_sent,
-                                                  retention_days=settings.log_retention_days)
+                                                  max_rows=settings.log_max_rows)
             except Exception as log_error:
                 print(f"servelamb_errors: could not log the error: {log_error!r}")
 

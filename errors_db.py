@@ -34,7 +34,7 @@ class ErrorsDB(PostgresDB):
         ))
 
         """Every error reported, sent to Slack or not, for showing in an app and for a daily summary.
-        Only the last log_retention_days are kept: older rows are deleted each time one is added"""
+        Only the newest log_max_rows are kept: the oldest are deleted each time one is added"""
         self.error_log = self.register_table(DbTableDefinition(
             schema=self.schema,
             name='error_log',
