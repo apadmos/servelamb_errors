@@ -1,5 +1,6 @@
 import json
 import traceback
+import urllib.parse
 import urllib.request
 
 from .errors_config import ErrorsConfig, ErrorReportingSettings
@@ -93,11 +94,24 @@ class ErrorReporter:
                 f"User agent: {headers.get('user-agent') or '(none)'}",
                 f"Response: {str(resp.body or '')[:500]}",
             ])
-            cls.report(kind=str(resp.status), title=f"{resp.status} {req.method} {req.path}", details=details,
+            title: str = f"{resp.status} {req.method} {cls.full_url(req=req)}"
+            cls.report(kind=str(resp.status), title=title, details=details,
                        status=resp.status, method=req.method, path=req.path)
         except Exception as reporting_error:
             cls._report_own_failure(settings=settings, title=f"{resp.status} response", details=None,
                                     reporting_error=reporting_error)
+
+    @staticmethod
+    def full_url(req) -> str:
+        """The address the visitor asked for, e.g. https://www.example.org/shows?page=2.
+        Behind CloudFront the Host header can be the origin's (the Lambda URL), so X-Forwarded-Host wins when present"""
+        headers: dict = req.headers or {}
+        host: str = headers.get("x-forwarded-host") or headers.get("host") or ""
+        is_local: bool = host.startswith("localhost") or host.startswith("127.0.0.1")
+        scheme: str = headers.get("x-forwarded-proto") or ("http" if is_local else "https")
+        query: str = urllib.parse.urlencode(req.query or {}, doseq=True)
+        query_text: str = f"?{query}" if query else ""
+        return f"{scheme}://{host}{req.path}{query_text}" if host else f"{req.path}{query_text}"
 
     @staticmethod
     def status_matches(status: int, patterns: list[str]) -> bool:

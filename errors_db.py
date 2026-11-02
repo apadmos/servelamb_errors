@@ -1,7 +1,8 @@
 from subs.crudepg.db_base import PostgresDB
 from subs.crudepg.db_table_definition import DbColumnDefinition as C
 from subs.crudepg.db_table_definition import DbTableDefinition
-from .errors_config import ErrorsConfig
+"""Absolute, like servelamb_users.users_db, so this file can also be run directly to create its tables"""
+from servelamb_errors.errors_config import ErrorsConfig
 
 
 class ErrorsDB(PostgresDB):
