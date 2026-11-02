@@ -58,7 +58,12 @@ class ErrorReporter:
                                  f"{settings.throttle_minutes:g} minute throttle_")
 
         mention: str = f"{settings.slack_mention} " if settings.slack_mention else ""
-        detail_block: str = f"\n```{details[:cls.MAX_DETAIL_CHARS]}```" if details else ""
+        """Long details keep their start (the request) and their end (the exception message); the middle of a
+        traceback is the least useful part"""
+        is_long: bool = bool(details) and len(details) > cls.MAX_DETAIL_CHARS
+        shown_details: str = (details[:800] + "\n…\n" + details[-(cls.MAX_DETAIL_CHARS - 800):]
+                              if is_long else details)
+        detail_block: str = f"\n```{shown_details}```" if details else ""
         text: str = f"{mention} [{settings.environment_label}] {title} {detail_block}{throttle_note}"
         cls._post(url=settings.slack_webhook_url, text=text)
         return True
